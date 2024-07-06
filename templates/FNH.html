@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find Nearest Hospitals</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #333; /* Dark gray */
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #555; /* Medium gray */
+    border-radius: 10px;
+    border: 3px solid #333; /* Dark gray */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #777; /* Light gray on hover */
+}
+
+/* Custom scrollbar styles */
+body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-image: url("{{ url_for('static',filename='images/FNH1.jpg')}}"); /* Add background image */
+    background-size: cover; /* Cover the whole page */
+    background-repeat: no-repeat; /* Prevent background image repetition */
+    background-attachment: fixed; /* Fix the background image */
+    color: #fff;
+    overflow-x: hidden;
+}
+
+.navbar {
+    background-color: #333; /* Dark gray */
+    color: #fff;
+    padding: 15px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%; /* Set navbar width to 100% */
+    position: fixed; /* Fix the navbar position */
+    top: 0; /* Align navbar to the top */
+    left: 0; /* Align navbar to the left */
+    z-index: 1000; /* Ensure navbar appears on top */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    animation: fadeInDown 1s ease-in-out;
+}
+
+.navbar-left {
+    flex: 1;
+}
+
+.navbar-right {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.navbar-button {
+    background-color: #333; /* Dark gray */
+    color: #fff;
+    padding: 8px 15px;
+    margin-left: 10px;
+    border: 2px solid #888; /* Light gray */
+    border-radius: 30px;
+    cursor: pointer;
+    outline: none;
+    text-decoration: none;
+    transition: background-color 0.3s, border-color 0.3s;
+    margin-right: 0.4cm;
+    animation: fadeInUp 1s ease-in-out;
+}
+
+.navbar-button:hover {
+    background-color: #555; /* Darker gray on hover */
+    border-color: #333; /* Dark gray */
+}
+
+.container {
+    max-width: 800px;
+    margin: 100px auto 0; /* Adjust margin to make space for the fixed navbar */
+    padding: 20px;
+    text-align: center;
+    animation: fadeIn 2s ease-in-out;
+}
+
+button {
+    background-color: #333; /* Dark gray */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    animation: bounceIn 2s ease-in-out;
+}
+
+button:hover {
+    background-color: #555; /* Darker gray on hover */
+    transform: scale(1.05);
+}
+
+#results {
+    margin-top: 20px;
+    text-align: left;
+    animation: slideInUp 2s ease-in-out;
+}
+
+.result-item {
+    background-color: #1f1f1f; /* Dark gray */
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Dark shadow */
+    animation: fadeInUp 1s ease-in-out;
+}
+
+.result-item h3 {
+    margin: 0;
+}
+
+#map {
+    height: 400px;
+    width: 100%;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 2s ease-in-out;
+}
+
+/* Keyframes for animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounceIn {
+    0%, 20%, 40%, 60%, 80%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="navbar-left">Find Nearest Hospitals</div>
+    <div class="navbar-right">
+        <a href="/" class="navbar-button">Disease Prediction</a>
+        <a href="/bmi" class="navbar-button">BMI Calculator</a>
+        <a href= "/fnh" class="navbar-button">Find Nearest Hospitals</a>
+        <a href= "/about" class="navbar-button">About Us</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <button onclick="findHospitals()">Find Hospitals</button>
+    <div id="map"></div>
+    <div id="results"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+// JavaScript code
+let map;
+let myLocationMarker;
+
+function initMap(lat, lon) {
+    map = L.map('map').setView([lat, lon], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Add a red marker for your current location
+    myLocationMarker = L.marker([lat, lon], {
+        icon: L.divIcon({
+            className: 'my-location-icon',
+            html: '<div style="background-color: red; width: 20px; height: 20px; border-radius: 50%;"></div>'
+        })
+    }).addTo(map).bindPopup("Your Location").openPopup();
+}
+
+function findHospitals() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
+
+function showPosition(position) {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+    const resultsDiv = document.getElementById('results');
+
+    // Initialize the map if not already initialized
+    if (!map) {
+        initMap(lat, lon);
+    } else {
+        // Otherwise, just set the view to the current location
+        map.setView([lat, lon], 13);
+        // Update marker position for current location
+        myLocationMarker.setLatLng([lat, lon]).openPopup();
+    }
+
+    // Overpass API query URL
+    const apiUrl = `https://overpass-api.de/api/interpreter?data=[out:json];node(around:5000,${lat},${lon})[amenity=hospital];out;`;
+
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            resultsDiv.innerHTML = "";
+            if (data.elements.length > 0) {
+                // Calculate distances and sort hospitals
+                const hospitals = data.elements.map(hospital => ({
+                    ...hospital,
+                    distance: calculateDistance(lat, lon, hospital.lat, hospital.lon)
+                }));
+                hospitals.sort((a, b) => a.distance - b.distance);
+
+                hospitals.forEach(hospital => {
+                    const item = document.createElement('div');
+                    item.classList.add('result-item');
+                    item.innerHTML = `
+                        <h3>${hospital.tags.name}</h3>
+                        <p>Distance: ${hospital.distance.toFixed(2)} km</p>
+                    `;
+                    resultsDiv.appendChild(item);
+
+                    // Add marker for each hospital
+                    L.marker([hospital.lat, hospital.lon]).addTo(map)
+                        .bindPopup(`<b>${hospital.tags.name}</b><br>Distance: ${hospital.distance.toFixed(2)} km`).openPopup();
+                });
+            } else {
+                resultsDiv.innerHTML = "<p>No hospitals found nearby.</p>";
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching hospital data:', error);
+            resultsDiv.innerHTML = "<p>Could not retrieve hospital data. Please try again later.</p>";
+        });
+}
+
+function showError(error) {
+    const resultsDiv = document.getElementById('results');
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            resultsDiv.innerHTML = "<p>User denied the request for Geolocation.</p>";
+            break;
+        case error.POSITION_UNAVAILABLE:
+            resultsDiv.innerHTML = "<p>Location information is unavailable.</p>";
+            break;
+        case error.TIMEOUT:
+            resultsDiv.innerHTML = "<p>The request to get user location timed out.</p>";
+            break;
+        case error.UNKNOWN_ERROR:
+            resultsDiv.innerHTML = "<p>An unknown error occurred.</p>";
+            break;
+    }
+}
+
+// Function to calculate distance between two points in kilometers
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the Earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance in km
+    return distance;
+}
+
+function deg2rad(deg) {
+    return deg * (Math.PI / 180);
+}
+</script>
+
+</body>
+</html>

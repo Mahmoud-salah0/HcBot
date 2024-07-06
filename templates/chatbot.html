@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disease Prediction Chatbot</title>
+<style>
+ /* Custom scrollbar styles */
+.chat-messages::-webkit-scrollbar {
+    width: 12px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: #333; /* Dark gray */
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background-color: #555; /* Medium gray */
+    border-radius: 10px;
+    border: 3px solid #333; /* Dark gray */
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background-color: #777; /* Light gray on hover */
+}
+
+/* CSS styles */
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #000000; /* Dark background */
+    color: #fff;
+}
+
+.navbar {
+    background-color: #333; /* Dark gray */
+    color: #fff;
+    padding: 15px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: margin-right 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.navbar-left {
+    flex: 1;
+}
+
+.navbar-right {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.navbar-button {
+    background-color: #333; /* Dark gray */
+    color: #fff;
+    padding: 8px 15px;
+    margin-left: 10px;
+    border: 2px solid #888; /* Light gray */
+    border-radius: 30px;
+    cursor: pointer;
+    outline: none;
+    text-decoration: none;
+    transition: background-color 0.3s, border-color 0.3s;
+    margin-right: 0.4cm;
+}
+
+.navbar-button:hover {
+    background-color: #555; /* Darker gray on hover */
+    border-color: #333; /* Dark gray */
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: -300px;
+    width: 250px;
+    height: 100%;
+    background-color: #333; /* Dark gray */
+    color: #fff;
+    transition: right 0.3s ease;
+    z-index: 999;
+    padding: 15px;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+}
+
+.show-sidebar {
+    right: 0;
+}
+
+.sidebar h3 {
+    color: #4CAF50; /* Green */
+    margin-bottom: 15px;
+}
+
+.sidebar label {
+    color: #fff;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.sidebar input[type="number"],
+.sidebar input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+    background-color: #818181; /* Dark gray */
+    color: #fff;
+}
+
+.chat-container {
+    height: calc(100% - 70px);
+    display: flex;
+    flex-direction: column;
+    margin-right: 0;
+    transition: margin-right 0.3s ease;
+}
+
+.chat-header {
+    background-color: #333; /* Dark gray */
+    color: #fff;
+    padding: 15px;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #121212; /* Darker background for messages */
+}
+
+.message {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.message-bubble {
+    max-width: 80%;
+    padding: 15px 20px;
+    border-radius: 20px;
+    margin: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Dark shadow */
+    transition: transform 0.3s;
+}
+
+.message.sender .message-bubble {
+    background-color: #555; /* Medium gray */
+    color: #fff;
+    align-self: flex-end;
+    border-radius: 20px 20px 0 20px;
+}
+
+.message.sender .message-bubble:hover {
+    transform: scale(1.05);
+}
+
+.message.receiver .message-bubble {
+    background-color: #333; /* Dark gray */
+    color: #fff;
+    align-self: flex-start;
+    border-radius: 20px 20px 20px 0;
+}
+
+.message.receiver .message-bubble:hover {
+    transform: scale(1.05);
+}
+
+.message-input {
+    display: flex;
+    padding: 10px;
+    background-color: #1f1f1f; /* Darker gray */
+    border-top: 2px solid #4CAF50; /* Green */
+}
+
+.message-input input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 30px;
+    outline: none;
+    background-color: #333; /* Dark gray */
+    color: #fff;
+    margin-right: 10px;
+}
+
+.message-input button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 30px;
+    background-color: #4d4d4d; /* Green */
+    color: #ffffff;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.message-input button:hover {
+    background-color: #333; /* Darker gray on hover */
+    transform: scale(1.05);
+}
+
+.message-input .voice-button {
+    margin-left: 10px;
+    background-color: #414141; /* Red for voice button */
+}
+
+.message-input .voice-button.recording {
+    background-color: #ffffff; /* Darker red when recording */
+}
+
+.message-input .voice-button:hover {
+    background-color: #8b8b8b; /* Darker red on hover */
+}
+
+.navbar {
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.navbar:hover {
+    background-color: #333; /* Darken background on hover */
+    color: #fff; /* Change text color on hover */
+}
+
+/* Button hover animation */
+.navbar-button {
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.navbar-button:hover {
+    background-color: #555; /* Darken button background on hover */
+}
+
+/* Sidebar animation */
+.sidebar {
+    transition: transform 0.3s ease;
+}
+
+.show-sidebar {
+    transform: translateX(0); /* Slide in from the right */
+}
+
+/* Message bubble animation */
+.message-bubble {
+    animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Chat message animation */
+.message {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    0% {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+
+</style>
+</head>
+<body>
+
+<div class="navbar" id="navbar">
+    <div class="navbar-left">
+        <a class="navbar-title">Disease Prediction Chatbot</a>
+    </div>
+    <div class="navbar-right">
+        <a href="/" class="navbar-button">Disease Prediction</a>
+        <a href="/bmi" class="navbar-button">BMI Calculator</a>
+        <a href= "/fnh" class="navbar-button">Find Nearest Hospitals</a>
+        <a href= "/about" class="navbar-button">About Us</a>
+
+        <a href="#" class="navbar-button" onclick="toggleSidebar()">Control</a>
+    </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <!-- Sidebar content goes here -->
+    <h3>Customization</h3>
+    <label for="fontSizeInput">Change Font Size:</label>
+    <input type="number" id="fontSizeInput" min="10" max="30" onchange="changeFontSize(this.value)">
+    <label for="searchInput">Search Chat:</label>
+    <input type="text" id="searchInput" onkeyup="searchChat(this.value)">
+</div>
+
+<div class="chat-container" id="chat-container">
+    <div class="chat-messages" id="chat-messages">
+        <!-- Chat messages will appear here -->
+    </div>
+    <div class="message-input">
+        <input type="text" id="user-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Send</button>
+        <button class="voice-button" id="voice-button" onclick="toggleVoiceRecognition()">🎤</button>
+    </div>
+</div>
+
+<script>
+    // JavaScript code
+    const chatMessages = document.getElementById('chat-messages');
+    const sidebar = document.getElementById('sidebar');
+    const chatContainer = document.getElementById('chat-container');
+    const navbar = document.getElementById('navbar');
+    const voiceButton = document.getElementById('voice-button');
+    let recognition;
+    let recognizing = false;
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('show-sidebar');
+        if (sidebar.classList.contains('show-sidebar')) {
+            chatContainer.style.marginRight = '250px';
+            navbar.style.marginRight = '250px';
+        } else {
+            chatContainer.style.marginRight = '0';
+            navbar.style.marginRight = '0';
+        }
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+  function sendMessage() {
+    var userInput = document.getElementById("user-input").value.trim();
+    if (!userInput) return;
+
+    appendUserMessage(userInput);
+    document.getElementById("user-input").value = "";
+    fetch('/process', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: userInput }),
+    }).then(response => response.json())
+    .then(data => {
+        var botResponse = data['html_response'];
+        appendBotMessage(botResponse);
+        scrollToBottom();
+    })
+    .catch(error => {
+        console.error('Error sending message:', error);
+    });
+}
+
+function appendUserMessage(message) {
+    var chatMessages = document.querySelector('.chat-messages');
+    var userMessageDiv = document.createElement('div');
+    userMessageDiv.classList.add('message', 'sender');
+    var messageBubbleDiv = document.createElement('div');
+    messageBubbleDiv.classList.add('message-bubble');
+    messageBubbleDiv.innerHTML = message;
+    messageBubbleDiv.style.marginBottom = '10px';
+    userMessageDiv.appendChild(messageBubbleDiv);
+    chatMessages.appendChild(userMessageDiv);
+    setTimeout(() => scrollToBottom(), 100); // Delayed scroll to bottom after message appended
+}
+
+function appendBotMessage(message) {
+    var chatMessages = document.querySelector('.chat-messages');
+    var botMessageDiv = document.createElement('div');
+    botMessageDiv.classList.add('message', 'receiver');
+    var messageBubbleDiv = document.createElement('div');
+    messageBubbleDiv.classList.add('message-bubble');
+    messageBubbleDiv.innerHTML = message;
+    messageBubbleDiv.style.marginBottom = '10px';
+    botMessageDiv.appendChild(messageBubbleDiv);
+    chatMessages.appendChild(botMessageDiv);
+    setTimeout(() => scrollToBottom(), 100); // Delayed scroll to bottom after message appended
+}
+
+function scrollToBottom() {
+    var chatMessages = document.querySelector('.chat-messages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+    function changeFontSize(size) {
+        document.querySelectorAll('.message-bubble').forEach(bubble => {
+            bubble.style.fontSize = size + 'px';
+        });
+    }
+
+    function searchChat(keyword) {
+        const messages = document.querySelectorAll('.message-bubble');
+        messages.forEach(message => {
+            const text = message.textContent.toLowerCase();
+            if (text.includes(keyword.toLowerCase())) {
+                message.closest('.message').style.display = 'flex';
+            } else {
+                message.closest('.message').style.display = 'none';
+            }
+        });
+    }
+
+    function toggleVoiceRecognition() {
+    if (recognizing) {
+        recognition.stop();
+        voiceButton.classList.remove('recording');
+        recognizing = false;
+    } else {
+        if (!('webkitSpeechRecognition' in window)) {
+            alert('Your browser does not support speech recognition. Please try Google Chrome.');
+            return;
+        }
+
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = function() {
+            voiceButton.classList.add('recording');
+            console.log('Voice recognition started. Try speaking into the microphone.');
+        };
+
+        recognition.onresult = function(event) {
+            var transcript = event.results[0][0].transcript;
+            var userInput = document.getElementById('user-input');
+            userInput.value += (userInput.value ? ' ' : '') + transcript; // Append recognized text
+        };
+
+        recognition.onerror = function(event) {
+            console.error('Voice recognition error', event.error);
+            recognition.stop();
+            voiceButton.classList.remove('recording');
+            recognizing = false;
+        };
+
+        recognition.onend = function() {
+            voiceButton.classList.remove('recording');
+            recognizing = false;
+        };
+
+        recognition.start();
+        recognizing = true;
+    }
+}
+
+    
+    window.onload = function() {
+        scrollToBottom();
+    };
+</script>
+
+</body>
+</html>

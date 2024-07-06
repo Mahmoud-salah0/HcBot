@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMI Calculator</title>
+<style>
+    ::-webkit-scrollbar {
+        width: 12px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #333; /* Dark gray */
+    }
+    ::-webkit-scrollbar-thumb {
+        background-color: #555; /* Medium gray */
+        border-radius: 10px;
+        border: 3px solid #333; /* Dark gray */
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: #777; /* Light gray on hover */
+    }
+    /* Custom scrollbar styles */
+    body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: 'Roboto', sans-serif;
+        background-image: url("{{ url_for('static',filename='images/bmi.jpg')}}"); /* Add background image */
+        background-size: cover; /* Cover the whole page */
+        background-repeat: no-repeat; /* Prevent background image repetition */
+        background-attachment: fixed; /* Fix the background image */
+        color: #fff;
+        overflow-x: hidden;
+    }
+    .navbar {
+        background-color: #333; /* Dark gray */
+        color: #fff;
+        padding: 15px;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%; /* Set navbar width to 100% */
+        position: fixed; /* Fix the navbar position */
+        top: 0; /* Align navbar to the top */
+        left: 0; /* Align navbar to the left */
+        z-index: 1000; /* Ensure navbar appears on top */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        animation: fadeInDown 1s ease-in-out;
+    }
+    .navbar-left {
+        flex: 1;
+    }
+    .navbar-right {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+    .navbar-button {
+        background-color: #333; /* Dark gray */
+        color: #fff;
+        padding: 8px 15px;
+        margin-left: 10px;
+        border: 2px solid #888; /* Light gray */
+        border-radius: 30px;
+        cursor: pointer;
+        outline: none;
+        text-decoration: none;
+        transition: background-color 0.3s, border-color 0.3s;
+        margin-right: 0.4cm;
+        animation: fadeInUp 1s ease-in-out;
+    }
+    .navbar-button:hover {
+        background-color: #555; /* Darker gray on hover */
+        border-color: #333; /* Dark gray */
+    }
+    .container {
+        max-width: 400px;
+        margin: 100px auto 0; /* Adjust margin to make space for the fixed navbar */
+        padding: 20px;
+        background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background for better readability */
+        border-radius: 10px; /* Rounded corners */
+        animation: fadeIn 2s ease-in-out;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+        animation: fadeInLeft 1s ease-in-out;
+    }
+    input[type="number"] {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        animation: fadeInRight 1s ease-in-out;
+    }
+    button {
+        background-color: #333; /* Dark gray */
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s;
+        animation: bounceIn 2s ease-in-out;
+    }
+    button:hover {
+        background-color: #555; /* Darker gray on hover */
+        transform: scale(1.05);
+    }
+    #result {
+        margin-top: 20px;
+        animation: fadeInUp 2s ease-in-out;
+    }
+    /* Keyframes for animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    @keyframes fadeInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    @keyframes fadeInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    @keyframes bounceIn {
+        0%, 20%, 40%, 60%, 80%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="navbar-left">BMI Calculator</div>
+    <div class="navbar-right">
+        <a href="/" class="navbar-button">Disease Prediction</a>
+        <a href="/bmi" class="navbar-button">BMI Calculator</a>
+        <a href= "/fnh" class="navbar-button">Find Nearest Hospitals</a>
+        <a href= "/about" class="navbar-button">About Us</a>
+    </div>
+</div>
+
+<div class="container">
+    <h2>BMI Calculator</h2>
+    <form id="bmiForm">
+        <label for="age">Age (years):</label>
+        <input type="number" id="age" name="age" required>
+        <label for="height">Height (cm):</label>
+        <input type="number" id="height" name="height" required>
+        <label for="weight">Weight (kg):</label>
+        <input type="number" id="weight" name="weight" required>
+        <button type="button" onclick="calculateBMI()">Calculate BMI</button>
+    </form>
+    <div id="result"></div>
+</div>
+
+<script>
+    // JavaScript code
+    function calculateBMI() {
+        var age = parseInt(document.getElementById('age').value);
+        var height = parseFloat(document.getElementById('height').value);
+        var weight = parseFloat(document.getElementById('weight').value);
+
+        if (isNaN(age) || isNaN(height) || isNaN(weight)) {
+            alert("Please enter valid numbers.");
+            return;
+        }
+
+        var bmi = weight / ((height / 100) * (height / 100));
+        var { category, recommendation } = getBMICategory(bmi);
+
+        var resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = "<h3>Your BMI: " + bmi.toFixed(2) + "</h3><p>Category: " + category + "</p><p>" + recommendation + "</p>";
+    }
+
+    function getBMICategory(bmi) {
+        if (bmi < 18.5) {
+            return {
+                category: "Underweight",
+                recommendation: "Consider consulting with a healthcare provider for advice on gaining weight in a healthy manner."
+            };
+        } else if (bmi >= 18.5 && bmi < 25) {
+            return {
+                category: "Normal weight",
+                recommendation: "Great job! Continue maintaining a balanced diet and regular exercise to stay healthy."
+            };
+        } else if (bmi >= 25 && bmi < 30) {
+            return {
+                category: "Overweight",
+                recommendation: "Consider adopting a healthier diet and incorporating more physical activity into your routine."
+            };
+        } else {
+            return {
+                category: "Obese",
+                recommendation: "It's important to consult with a healthcare provider to develop a plan for achieving a healthier weight."
+            };
+        }
+    }
+</script>
+
+</body>
+</html>
